@@ -17,6 +17,7 @@ Appium 其中一个理念就是你不能为了测试应用而修改应用。为�
 1.  如果你想停止 web 视图的自动化，回到原生部分，你可以简单地使用 `execute_script` 调用 `"mobile: leaveWebView"` 方法来离开 web 层。
 
 ## 在 iOS 真机上运行
+
 appium 使用一个远程调试器建立连接来实现和 web 视图的交互。当在模拟器上执行下面例子的时候，我们可以直接建立连接，因为模拟器和 appium 服务器在同一台机器上。
 
 当在真机上运行用例时，appium 无法直接访问 web 视图，所以我们需要通过 USB 线缆来建立连接。我们使用 [ios-webkit-debugger-proxy](https://github.com/google/ios-webkit-debug-proxy)建立连接。
@@ -50,7 +51,7 @@ appium 使用一个远程调试器建立连接来实现和 web 视图的交互�
 > ios_webkit_debug_proxy -c 0e4b2f612b65e98c1d07d22ee08678130d345429:27753 -d
 ```
 
-**注意：** 这个 ios-webkit-debug-proxy 需要 **"web inspector"** 打开着以便建立连接。在 ** settings > safari > advanced ** 里打开它。请注意 web inspector **在 iOS6 时候加入的** 以前的版本没有。
+<b>注意：</b> 这个 ios-webkit-debug-proxy 需要 <b>"web inspector"</b> 打开着以便建立连接。在 <b> settings > safari > advanced </b> 里打开它。请注意 web inspector <b>在 iOS6 时候加入的</b> 以前的版本没有。
 
 ## Wd.js Code example
 

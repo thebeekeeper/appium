@@ -1,6 +1,5 @@
 # 在 Linux 上运行 Appium
 
-
 ### 限制
 
 如果你在 Linux 上使用 Appium， 那么你没法使用已经构建好的 '.app'，那是为 OS X 准备的。 另外由于 Appium 在测试 iOS 应用时 依赖 OS X 特有的库， 所以你也没有办法测试在 Linux 上测试 iOS 应用。

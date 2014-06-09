@@ -9,10 +9,10 @@ You are able to register your appium server with a local grid by using the
 
 In the node config file you have to define the **"browserName"**,
 **"version"** and **"platform"** and based on these parameters the grid
- will re-direct your test to the right device. You will also need to
- configure you **host** details and the **selenium grid** details. For
- a full list of all parameters and descriptions look
- [here](http://code.google.com/p/selenium/source/browse/java/server/src/org/openqa/grid/common/defaults/GridParameters.properties)
+will re-direct your test to the right device. You will also need to
+configure you **host** details and the **selenium grid** details. For
+a full list of all parameters and descriptions look
+[here](http://code.google.com/p/selenium/source/browse/java/server/src/org/openqa/grid/common/defaults/GridParameters.properties)
 
 Once you start the appium server and it registers with the grid,
 you will see your device on the grid console page:
@@ -27,7 +27,7 @@ you will see your device on the grid console page:
       [
         {
           "browserName": "<e.g._iPhone5_or_iPad4>",
-          "version":"<version_of_iOS_e.g._6.1>",
+          "version":"<version_of_iOS_e.g._7.1>",
           "maxInstances": 1,
           "platform":"<platform_e.g._MAC_or_ANDROID>"
         }

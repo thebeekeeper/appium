@@ -47,20 +47,3 @@ describe('testapp - context methods', function () {
       .nodeify(done);
   });
 });
-
-describe('testapp - window methods', function () {
-  var driver;
-  setup(this, desired).then(function (d) { driver = d; });
-
-  it('getting list multiple times should not crash appium', function (done) {
-    driver
-      .windowHandles().should.eventually.have.length(0)
-      .windowHandles().should.eventually.have.length(0)
-      .windowHandles().should.eventually.have.length(0)
-      .windowHandles().should.eventually.have.length(0)
-      .windowHandles().should.eventually.have.length(0)
-      .windowHandles().should.eventually.have.length(0)
-      .windowHandles().should.eventually.have.length(0)
-      .nodeify(done);
-  });
-});

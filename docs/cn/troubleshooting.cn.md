@@ -32,7 +32,7 @@
 * 确保 Android 模拟器启动并运行着。
 * 有时候需要运行 `adb kill-server && adb devices`。它可以帮助重置和Android设备之间的连接。
 * Make sure you know about the `app-package`, `app-activity`, and `app-wait-activity` desiredCapabilities (see [this doc](running-tests.md) for more information).
-* 你得知道 `app-package`， `app-activity` 和 `app-wait-activity` (详见 [文档](running-tests.md)).
+* 你得知道 `app-package`， `app-activity` 和 `app-wait-activity` (详见 [文档](running-tests.md).
 
 ## IOS
 

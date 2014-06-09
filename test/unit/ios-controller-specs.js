@@ -15,18 +15,9 @@ describe('ios-controller', function () {
       var actual = createGetElementCommand('name', 'UIAKey', null, false);
       actual.should.equal("au.getElementByName('UIAKey')");
     });
-    it('should return \'GetType\' for xpath selection', function () {
-      var actual = createGetElementCommand('xpath', 'UIAKey', null, false);
-      actual.should.equal("au.getElementByXpath('UIAKey')");
-    });
     it('should return \'GetType\' for id selection', function () {
       var actual = createGetElementCommand('id', 'UIAKey', null, false);
-      var expected = "var exact = au.mainApp().getFirstWithPredicateWeighted" +
-                     "(\"name == 'UIAKey' || label == 'UIAKey' || value == '" +
-                     "UIAKey'\");exact && exact.status == 0 ? exact : " +
-                     "au.mainApp().getFirstWithPredicateWeighted(\"name " +
-                     "contains[c] 'UIAKey' || label contains[c] 'UIAKey' || " +
-                     "value contains[c] 'UIAKey'\");";
+      var expected = "au.getElementById('UIAKey')";
       actual.should.equal(expected);
     });
     it('should return \'GetType\' for tag name selection', function () {
@@ -36,6 +27,34 @@ describe('ios-controller', function () {
     it('should return \'GetType\' for class name selection', function () {
       var actual = createGetElementCommand('class name', 'UIAKey', null, false);
       actual.should.equal("au.getElementByType('UIAKey')");
+    });
+  });
+  describe('#getLocalizedStringForSelector', function () {
+    describe('when there are no localizableStrings', function () {
+      beforeEach(function () {
+        controller.localizableStrings = {};
+      });
+      it('returns the selector if there are no localizableStrings', function () {
+        var actual = controller.getLocalizedStringForSelector('someSelector');
+        actual.should.equal('someSelector');
+      });
+    });
+    describe('when there are localizableStrings', function () {
+      beforeEach(function () {
+        var locString = [{'someSelector': 'localSelector'}];
+        controller.localizableStrings = locString;
+      });
+      afterEach(function () {
+        controller.localizableStrings = {};
+      });
+      it('returns the localized string', function () {
+        var actual = controller.getLocalizedStringForSelector('someSelector');
+        actual.should.equal('localSelector');
+      });
+      it('returns the selector if there is not a matching key in localizableStrings', function () {
+        var actual = controller.getLocalizedStringForSelector('notFoundSelector');
+        actual.should.equal('notFoundSelector');
+      });
     });
   });
   describe('#getSelectorForStrategy', function () {
@@ -49,30 +68,6 @@ describe('ios-controller', function () {
         (function () {
           getSelectorForStrategy('class name', 'key');
         }).should.Throw(TypeError, msg);
-      });
-    });
-    describe('given an id', function () {
-      describe('when there are no localizableStrings', function () {
-        beforeEach(function () {
-          controller.localizableStrings = {};
-        });
-        it('returns the selector if there aren\'t localizableStrings', function () {
-          var actual = controller.getSelectorForStrategy('id', 'someSelector');
-          actual.should.equal('someSelector');
-        });
-      });
-      describe('when there are localizableStrings', function () {
-        beforeEach(function () {
-          var locString = [{'someSelector': 'localSelector'}];
-          controller.localizableStrings = locString;
-        });
-        afterEach(function () {
-          controller.localizableStrings = {};
-        });
-        it('returns the localized string', function () {
-          var actual = controller.getSelectorForStrategy('id', 'someSelector');
-          actual.should.equal('localSelector');
-        });
       });
     });
   });
