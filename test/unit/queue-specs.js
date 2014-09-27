@@ -6,44 +6,13 @@
 var chai = require('chai')
   , should = chai.should()
   , getAppium = require('../../lib/appium.js')
-  , path = require('path')
   , mock = require('../helpers/mock.js')
-  , IOS = require('../../lib/devices/ios/ios.js');
+  , IOS = require('../../lib/devices/ios/ios.js')
+  , path = require('path');
 
 mock.noop(IOS.prototype, 'start');
 mock.noop(IOS.prototype, 'stop');
 mock.noop(IOS.prototype, 'configureApp');
-
-describe('IOS', function () {
-  // we'd like to test ios.proxy; mock instruments
-  var inst = new IOS({});
-  inst.instruments = {};
-  inst.instruments.sendCommand = function (cmd, cb) {
-    // let's pretend we've got some latency here.
-    var to = Math.round(Math.random() * 10);
-    setTimeout(function () { cb([cmd, to]); }, to);
-  };
-
-  describe('#proxy()', function () {
-    return it('should execute one command at a time keeping the seq right', function (done) {
-      var intercept = []
-        , iterations = 100
-        , check = function (err, result) {
-          intercept.push(result);
-          if (intercept.length >= iterations) {
-            for (var x = 0; x < iterations; x++) {
-              intercept[x][0].should.equal('' + x);
-            }
-            done();
-          }
-        };
-
-      for (var i = 0; i < iterations; i++) {
-        inst.proxy("" + i, check);
-      }
-    });
-  });
-});
 
 describe('Appium', function () {
   var intercept = []
@@ -67,7 +36,7 @@ describe('Appium', function () {
       var loop = function (num) {
         if (num > 9)
           return;
-        appium.start({app: "/path/to/fake.app", device: "iPhone"}, function (err) {
+        appium.start({app: "/path/to/fake.app", deviceName: "iPhone", platformName: "iOS"}, function (err) {
           var n = num;
           if (n === 0) {
             should.not.exist(err);
@@ -97,7 +66,7 @@ describe('Appium with clobber', function () {
   describe('#start', function () {
     it('should clobber existing sessions', function (done) {
       var numSessions = 9
-        , dc = {app: "/path/to/fake.app", device: "iPhone"};
+        , dc = {app: "/path/to/fake.app", deviceName: "iPhone", platformName: 'iOS'};
       var loop = function (num) {
         if (num > numSessions) return;
         appium.start(dc, function () {
@@ -120,7 +89,7 @@ describe('Appium with clobber', function () {
     });
 
     it('should retain sessionOverride arg across sessions', function (done) {
-      var dc = {app: "/path/to/fake.app"};
+      var dc = {app: "/path/to/fake.app", deviceName: "iPhone", platformName: 'iOS'};
       appium.start(dc, function () {
         appium.sessionOverride.should.eql(true);
         appium.cleanupSession(null, function () {

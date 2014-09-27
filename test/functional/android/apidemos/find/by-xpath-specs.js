@@ -3,7 +3,8 @@
 var setup = require("../../../common/setup-base")
   , desired = require("../desired")
   , atv = 'android.widget.TextView'
-  , alv = 'android.widget.ListView';
+  , alv = 'android.widget.ListView'
+  ;
 
 describe("apidemo - find - by xpath", function () {
 
@@ -15,7 +16,7 @@ describe("apidemo - find - by xpath", function () {
   var t = atv;
 
   before(function (done) {
-    driver.sleep(1000).nodeify(done);
+    driver.sleep(2000).nodeify(done);
   });
 
   it('should find element by type', function (done) {
@@ -38,21 +39,58 @@ describe("apidemo - find - by xpath", function () {
   });
   it('should find the last element', function (done) {
     driver
-      .elementByXPath("//" + t + "[last()]").text()
+      .elementByXPath("(//" + t + ")[last()]").text()
       .then(function (text) {
-        ["OS", "Text", "Views"].should.include(text);
+        ["OS", "Text", "Views", "Preference"].should.include(text);
       }).nodeify(done);
   });
   it('should find element by xpath index and child', function (done) {
     driver
-      .elementByXPath("//" + f + "[1]/" + l + "[1]/" + t + "[3]").text()
+      .elementByXPath("//" + f + "[2]/" + l + "[1]/" + t + "[4]").text()
         .should.become("App")
       .nodeify(done);
   });
   it('should find element by index and embedded desc', function (done) {
     driver
-      .elementByXPath("//" + f + "//" + t + "[4]").text()
-        .should.become("App")
+      .elementByXPath("//" + f + "//" + t + "[5]").text()
+        .should.become("Content")
       .nodeify(done);
+  });
+  it('should find all elements', function (done) {
+    driver
+      .elementsByXPath("//*").then(function (els) {
+        els.length.should.be.above(2);
+      })
+      .nodeify(done);
+  });
+  it('should find the first element when searching for all elements', function (done) {
+    driver
+      .elementByXPath("//*").then(function (el) {
+        return el.should.be.ok;
+      })
+      .nodeify(done);
+  });
+  it('should find less elements with compression turned on', function (done) {
+    var getElementsWithoutCompression = function () {
+      return driver.updateSettings({"ignoreUnimportantViews": false}).elementsByXPath("//*");
+    };
+    var getElementsWithCompression    = function () {
+      return driver.updateSettings({"ignoreUnimportantViews": true }).elementsByXPath("//*");
+    };
+
+    var elementsWithoutCompression, elementsWithCompression;
+
+    getElementsWithoutCompression()
+    .then(function (els) {
+      elementsWithoutCompression = els;
+      return getElementsWithCompression();
+    })
+    .then(function (els) {
+      elementsWithCompression = els;
+    })
+    .then(function () {
+      return elementsWithoutCompression.length.should.be.greaterThan(elementsWithCompression.length);
+    })
+    .nodeify(done);
   });
 });

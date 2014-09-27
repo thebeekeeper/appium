@@ -1,3 +1,198 @@
+CHANGES IN VERSION 1.2.3 (from 1.2.2)
+======================================
+
+#### General
+- add a settings api (used currently only for Android xpath compression)
+- add configurable loglevels for different transports
+- allow appium to be run under sudo if the sudo user owns the appium files
+
+#### iOS
+- fix crash while recovering from instruments failure
+- add ability to launch app by 'bundleId' cap alone (no 'app' cap)
+- misc groundwork for iOS8
+- fix bug that prevented scrolling collectionViews
+- more crash recovery bugfixes
+- use 'click' atom in webviews, 'tap' sent two clicks
+- fix bug where we'd try to kill a null logging proc and crash
+- enable performance logs for webviews
+- allow automation of native frame in safari (actually works on 7.1!)
+- fix uiautomation predicate search bug
+- fix 'spawn ENOENT' bug caused by a missing deviceconsole binary
+- fix autoAcceptAlert bug
+- fix certain findElement crashes
+- fix hideKeyboard bugs
+
+#### Android
+- fix issue with unzipping apk
+- add ability to launch arbitrary apps/activities mid-session
+- add lock() method to lock screen
+- add unlock() method to unlock screen
+- fix bug where app would be classified incorrectly as not installed
+- add settings api member for setting layout hierarchy compression
+- fix crash when touch actions attempted on webviews
+- undo setText changes and simply handle hint text fields better
+
+#### Selendroid
+- fix --selendroid-quick reset.sh option
+- fix unicode keyboard issues
+- fix bug in getting window_handles
+- fix bug that would prevent launching an app with spaces in its apk path
+
+
+CHANGES IN VERSION 1.2.2 (from 1.2.1)
+======================================
+
+#### General
+- add doc for running on multiple devices simultaneously
+- move sample code and sample apps out of the main appium repo
+- remove http request size limit
+
+#### iOS
+- check to make sure an element is not UIAElementNil before returning it
+- add a configurable key delay to help with keyboard smudging
+- fix issue with deleting cookies in mobile safari
+- correct sendKeys behavior not to clear text before sending keys
+- remove 'iwebview' support, since automating safari works
+- fix bug where apostraphes in accessibility ids caused elements not to be
+  found
+- use deviceconsole instead of idevicesyslog to capture ios logs
+- fix bug where automating safari on a real device would hang forever and never
+  start a session
+- fix bug where getting text() on a textfield would return its label instead of
+  its value
+
+#### Android
+- cache Chromedriver webview objects so we don't need to start a new
+  Chromedriver on every context switch
+- correct sendKeys behavior not to clear text before sending keys
+- allow chromeOptions cap object to be passed to chromedriver
+- download all chromedriver architectures for linux (32 and 64 bit)
+- make sure we stop adb logcat logging when ending a chrome session so we don't
+  leak processes
+- add noSign capability to skip the apk resigning process
+- add setText method that will clear a text field before adding text; this is
+  primarily useful for textfields with hint text where clear() does not work
+  in general
+- move xpath parsing into the android bootstrap, for fewer bugs and greater
+  reliability. NOTE: this could be a breaking change depending on the kind of
+  xpath selectors you are using
+- clean android XML tags of invalid characters like '$'
+- fix bug where '&' would be sent into a textfield as '&-'
+- add isLocked method to determine whether screen is locked
+- add ability to automate the native portion of the Chrome/Browser apps
+
+#### Selendroid
+- make sure the contact manager test app has the required internet permissions
+
+
+CHANGES IN VERSION 1.2.1 (from 1.2.0)
+======================================
+
+#### General
+- fix up sample code
+- bring back support for autoLaunch=false case
+- reset commandTimeout during implicit wait cycles
+- remove deprecated window_handles methods
+- add --local-timezone flag that uses timezone for timestamps
+- add a configurable --callback-address and --callback-port for execute_async
+- update setLocation method to use correct spec params for geolocation
+- add networkConnection to server capabilities so clients can use the API
+- if boolean cap values are sent in as strings, convert them to boolean
+
+#### iOS
+- fix bug where we waited for safari7 dirs when we weren't on ios7.x
+- improve deviceName flexibility and device recognition
+- make sure instruments and uiauto know about the tmp dir flag
+- fix install/uninstall logic for real ios device
+- fix bug with parsing of binary vs XML plists
+- fix handling of multiple taps
+- clean up iOS simulator log
+- fix hang when ending a real safari session
+- implement pushFile for ios
+- allow .ipa in the list of downloadable app types
+- retry getting screenshot if it fails
+- fix JavaScript error when using sendKeys
+- fix error where testsuite would kill appium in its ios reset cycle
+- fix error in getting localized strings
+
+#### Android
+- fix handling of IME activation
+- fix chromedriver kill logic
+- support API level 10 style focused activity strings
+- add lots of fallback strategies for element.clear()
+- update api level dependency for the project to 19
+- add fallback strategies for finding app activity from AndroidManifest
+- fix bug with xpath searches for //*
+- fix xpath search bugs, now we use UiAutomator's instance() which is more
+  reliable
+- fix grunt-helpers bug when building appium on windows
+- retry all adb commands to make all adb commands less flakey
+- upgrade chromedriver to 2.10
+
+#### Selendroid
+- fix for setValue and getContexts methods, they were not using a custom
+  selendroid port if active
+- selendroid now requires internet permission in apps; fail if it's not
+  present
+- add custom keystore support
+- upgrade selendroid to 0.11.0
+
+
+CHANGES IN VERSION 1.2.0 (from 1.1.0)
+======================================
+
+#### General
+- migrated to express 4 for the webserver
+- allow setting tmp dir with --tmp flag
+- upgrade many submodules including wd
+- add --strict-caps mode which will cause sessions to fail which send in
+  bad or unknown caps
+- add error handling for invalid multi-pointer gestures
+- add autoWebview capability to automatically get into a webview context of a
+  hybrid app
+- remove deprecated -real xpath locator strategy
+- allow bypassing appium's sudo checks
+- add generic crash handler
+- many documentation and sample code updates
+
+#### iOS
+- prevent log lines without dates from being filetered out
+- add keepAppToRetainPrefs cap to avoid deleting location plists
+- check for accessibility id matching selector then fall back to string match
+- add flag for specifying where in .app hierarchy Localizable.strings is
+- use a dynamic bootstrap in appium-uiauto
+- upgrade mechanic
+- implement pullFolder to get an entire folder from the sim
+- make sure launchAndKill can wait for specified directories before killing sim
+- get rid of ForceQuitInstruments
+- update hideKeyboard to take various possible strategies
+- fix launchAndKill to wait for safari-specific directories
+- make sure all pageload timeouts are cleared and called only once
+- disable ios grace delay
+- don't return duplicate elements
+
+#### Android
+- renamed keyevent to press_keycode and long_press_keycode
+- add dedupe to complex_find
+- fix activity-finding logic
+- fix error handling in installApp
+- extract adb code into its own package, appium-adb
+- add support for opening notifications
+- add automation support for embedded chromium
+- fix pushStrings to work with 'app' as package
+- fix id serach
+- cause appium to fail if we can't parse package/activity
+- add package name to android webview context
+- make sure UNZIP env var doesn't confuse our internal unzip calls
+- add appIntent etc capabilities so app can be launched with a certain intent
+- add IME methods, and an appium-specific IME that is automatically installed
+- add unicodeKeyboard capability which allows sending unicode text
+- fix installApp, prevent a server crash
+
+#### Selendroid
+- faster selendroid installer
+
+
 CHANGES IN VERSION 1.1.0 (from 1.0.0)
 ======================================
 

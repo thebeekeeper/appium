@@ -8,12 +8,18 @@ var desired = {
 };
 
 // TODO: bring back when new wd is published with setGeoLocation
-describe("apidemo - location", function () {
+describe("apidemo - location @skip-real-device", function () {
   var driver;
   setup(this, desired).then(function (d) { driver = d; });
 
   it('should set geo location', function (done) {
-    var getText = function () { return driver.elementByXPath("//android.widget.TextView[2]").text(); };
+    var getText = function () {
+      return driver
+        .elementsByClassName("android.widget.TextView")
+        .then(function (els) {
+          return els[1].text();
+        });
+    };
     var newLat = "27.17";
     var newLong = "78.04";
     driver

@@ -19,6 +19,8 @@ prod_deps=false
 appium_home=$(pwd)
 reset_successful=false
 has_reset_unlock_apk=false
+has_reset_ime_apk=false
+has_reset_settings_apk=false
 apidemos_reset=false
 toggletest_reset=false
 hardcore=false
@@ -136,6 +138,15 @@ reset_general() {
     fi
 }
 
+reset_sample_code() {
+    echo "* Initializing sample code and test apps"
+    if $hardcore ; then
+        run_cmd "$grunt" getSampleCode:hardcore
+    else
+        run_cmd "$grunt" getSampleCode
+    fi
+}
+
 reset_ios() {
     echo "RESETTING IOS"
     set +e
@@ -154,16 +165,6 @@ reset_ios() {
     echo "* Installing ios-sim-locale"
     run_cmd rm -f build/ios-sim-locale
     run_cmd cp assets/ios-sim-locale build/ios-sim-locale
-    echo "* Cloning/updating ForceQuitUnresponsiveApps"
-    run_cmd git submodule update --init submodules/ForceQuitUnresponsiveApps
-    echo "* Building ForceQuitUnresponsiveApps"
-    run_cmd pushd submodules/ForceQuitUnresponsiveApps
-    run_cmd ./build_force_quit.sh
-    run_cmd popd
-    echo "* Moving ForceQuitUnresponsiveApps into build/force_quit"
-    run_cmd rm -rf build/force_quit
-    run_cmd mkdir build/force_quit
-    run_cmd cp -R submodules/ForceQuitUnresponsiveApps/bin/* build/force_quit
     echo "* Cloning/updating udidetect"
     run_cmd git submodule update --init submodules/udidetect
     echo "* Building udidetect"
@@ -174,14 +175,6 @@ reset_ios() {
     run_cmd rm -rf build/udidetect
     run_cmd mkdir build/udidetect
     run_cmd cp -R submodules/udidetect/udidetect build/udidetect/
-    if $ios7_active ; then
-        echo "* Cleaning/rebuilding WebViewApp"
-        run_cmd "$grunt" buildApp:WebViewApp:iphonesimulator$sdk_ver
-        run_cmd rm -rf build/WebViewApp
-        run_cmd mkdir build/WebViewApp
-        run_cmd cp -R sample-code/apps/WebViewApp/build/Release-iphonesimulator/WebViewApp.app \
-            build/WebViewApp/
-    fi
     if $include_dev ; then
         if $npmlink ; then
             echo "* Cloning/npm linking appium-atoms"
@@ -196,13 +189,11 @@ reset_ios() {
         if $ios7_active ; then
             if $hardcore ; then
                 echo "* Clearing out old UICatalog download"
-                run_cmd rm -rf ./sample-code/apps/UICatalog*
+                run_cmd rm -rf ./sample-code/apps/UICatalog/
             fi
             if [ ! -d "./sample-code/apps/UICatalog" ]; then
-                echo "* Downloading UICatalog app source"
-                run_cmd curl -L https://developer.apple.com/library/ios/samplecode/UICatalog/UICatalog.zip -o ./sample-code/apps/UICatalog.zip
-                run_cmd pushd ./sample-code/apps
                 echo "* Unzipping UICatalog app source"
+                run_cmd pushd ./sample-code/apps
                 run_cmd unzip UICatalog.zip
                 run_cmd popd
             fi
@@ -211,6 +202,8 @@ reset_ios() {
         fi
         echo "* Cleaning/rebuilding iOS test app: TestApp"
         run_cmd "$grunt" buildApp:TestApp:iphonesimulator:$sdk_ver
+        echo "* Cleaning/rebuilding iOS test app: WebViewApp"
+        run_cmd "$grunt" buildApp:WebViewApp:iphonesimulator$sdk_ver
     fi
     echo "* Cloning/updating fruitstrap"
     run_cmd git submodule update --init submodules/fruitstrap
@@ -245,6 +238,16 @@ reset_ios() {
     echo "* Copying libimobiledevice-macosx to build"
     run_cmd rm -rf build/libimobiledevice-macosx
     run_cmd cp -r submodules/libimobiledevice-macosx build/libimobiledevice-macosx
+    echo "* Cloning/updating deviceconsole"
+    run_cmd git submodule update --init submodules/deviceconsole
+    echo "* Building deviceconsole"
+    run_cmd pushd submodules/deviceconsole
+    run_cmd make
+    run_cmd popd
+    echo "* Copying deviceconsole to build"
+    run_cmd rm -rf build/deviceconsole
+    run_cmd mkdir -p build/deviceconsole
+    run_cmd cp -r submodules/deviceconsole/deviceconsole build/deviceconsole/deviceconsole
 }
 
 get_apidemos() {
@@ -282,7 +285,7 @@ reset_apidemos() {
     echo "* Configuring and cleaning/building Android test app: ApiDemos"
     run_cmd "$grunt" configAndroidApp:ApiDemos
     run_cmd "$grunt" buildAndroidApp:ApiDemos
-    uninstall_android_app com.example.android.apis
+    uninstall_android_app io.appium.android.apis
     apidemos_reset=true
 }
 
@@ -325,6 +328,38 @@ reset_unlock_apk() {
     fi
 }
 
+reset_unicode_ime() {
+    if ! $has_reset_ime_apk; then
+        run_cmd rm -rf build/unicode_ime_apk
+        run_cmd mkdir -p build/unicode_ime_apk
+        echo "* Building UnicodeIME.apk"
+        ime_base="submodules/io.appium.android.ime"
+        run_cmd git submodule update --init $ime_base
+        run_cmd pushd $ime_base
+        run_cmd ant clean && run_cmd ant debug
+        run_cmd popd
+        run_cmd cp $ime_base/bin/UnicodeIME-debug.apk build/unicode_ime_apk
+        uninstall_android_app "io.appium.android.ime"
+        has_reset_ime_apk=true
+    fi
+}
+
+reset_settings_apk() {
+    if ! $has_reset_settings_apk; then
+        run_cmd rm -rf build/settings_apk
+        run_cmd mkdir -p build/settings_apk
+        echo "* Building Settings.apk"
+        settings_base="submodules/io.appium.settings"
+        run_cmd git submodule update --init $settings_base
+        run_cmd pushd $settings_base
+        run_cmd ant clean && run_cmd ant debug
+        run_cmd popd
+        run_cmd cp $settings_base/bin/settings_apk-debug.apk build/settings_apk
+        uninstall_android_app "io.appium.settings"
+        has_reset_settings_apk=true
+    fi
+}
+
 reset_android() {
     echo "RESETTING ANDROID"
     require_java
@@ -334,6 +369,8 @@ reset_android() {
     echo "* Building Android bootstrap"
     run_cmd "$grunt" buildAndroidBootstrap
     reset_unlock_apk
+    reset_unicode_ime
+    reset_settings_apk
     if $include_dev ; then
         reset_apidemos
         reset_toggle_test
@@ -357,7 +394,7 @@ reset_selendroid_quick() {
     run_cmd pushd /tmp/appium/selendroid
     echo "* Downloading metatata"
     run_cmd wget http://search.maven.org/remotecontent?filepath=io/selendroid/selendroid-standalone/maven-metadata.xml -O maven-metadata.xml
-    selendroid_version=$(grep latest maven-metadata.xml | sed 's/ *<\/*latest\> *//g')
+    selendroid_version=$(grep latest maven-metadata.xml | sed 's/ *<\/*latest> *//g')
     echo "* Selendroid version is ${selendroid_version}"
     echo "* Downloading selendroid server"
     run_cmd wget https://github.com/selendroid/selendroid/releases/download/${selendroid_version}/selendroid-standalone-${selendroid_version}-with-dependencies.jar
@@ -369,11 +406,11 @@ reset_selendroid_quick() {
     if $include_dev ; then
         if ! $apidemos_reset; then
             reset_apidemos
-            uninstall_android_app com.example.android.apis.selendroid
+            uninstall_android_app io.appium.android.apis.selendroid
         fi
         if ! $toggletest_reset; then
             reset_toggle_test
-            uninstall_android_app com.example.toggletest.selendroid
+            uninstall_android_app io.appium.toggletest.selendroid
         fi
         run_cmd pushd /tmp/appium/selendroid
         echo "* Downloading selendroid test app"
@@ -390,7 +427,7 @@ reset_selendroid_quick() {
         uninstall_android_app org.openqa.selendroid.testapp
     fi
     echo "* Setting Selendroid config to Appium's version"
-    run_cmd "$grunt" setConfigVer:selendroid    
+    run_cmd "$grunt" setConfigVer:selendroid
 }
 
 reset_selendroid() {
@@ -408,14 +445,15 @@ reset_selendroid() {
     run_cmd git reset --hard
     run_cmd popd
     reset_unlock_apk
+    reset_unicode_ime
     if $include_dev ; then
         if ! $apidemos_reset; then
             reset_apidemos
-            uninstall_android_app com.example.android.apis.selendroid
+            uninstall_android_app io.appium.android.apis.selendroid
         fi
         if ! $toggletest_reset; then
             reset_toggle_test
-            uninstall_android_app com.example.toggletest.selendroid
+            uninstall_android_app io.appium.toggletest.selendroid
         fi
         echo "* Linking selendroid test app"
         run_cmd rm -rf "$appium_home"/sample-code/apps/selendroid-test-app.apk
@@ -453,6 +491,12 @@ reset_gappium() {
 
 reset_chromedriver() {
     echo "RESETTING CHROMEDRIVER"
+    machine=$(run_cmd_output uname -m)
+    if [ "$machine" == "i686" ]; then
+        machine="32"
+    else
+        machine="64"
+    fi
     if [ -d "$appium_home"/build/chromedriver ]; then
         echo "* Clearing old ChromeDriver(s)"
         run_cmd rm -rf "$appium_home"/build/chromedriver/*
@@ -471,12 +515,14 @@ reset_chromedriver() {
             platform="mac"
             chromedriver_file="chromedriver_mac32.zip"
             run_cmd mkdir "$appium_home"/build/chromedriver/mac
+            install_chromedriver $platform $chromedriver_version $chromedriver_file
         else
             platform="linux"
-            chromedriver_file="chromedriver_linux32.zip"
+            chromedriver_file="chromedriver_linux$machine.zip"
+            binary="chromedriver$machine"
             run_cmd mkdir "$appium_home"/build/chromedriver/linux
+            install_chromedriver $platform $chromedriver_version $chromedriver_file $binary
         fi
-        install_chromedriver $platform $chromedriver_version $chromedriver_file
     else
         echo "* Building directory structure"
         run_cmd mkdir "$appium_home"/build/chromedriver/mac
@@ -484,7 +530,8 @@ reset_chromedriver() {
         run_cmd mkdir "$appium_home"/build/chromedriver/windows
 
         install_chromedriver "mac" $chromedriver_version "chromedriver_mac32.zip"
-        install_chromedriver "linux" $chromedriver_version "chromedriver_linux32.zip"
+        install_chromedriver "linux" $chromedriver_version "chromedriver_linux32.zip" "chromedriver32"
+        install_chromedriver "linux" $chromedriver_version "chromedriver_linux64.zip" "chromedriver64"
         install_chromedriver "windows" $chromedriver_version "chromedriver_win32.zip"
     fi
 }
@@ -493,6 +540,7 @@ install_chromedriver() {
     platform=$1
     version=$2
     file=$3
+    binary=$4
 
     echo "* Downloading ChromeDriver version $version for $platform"
     run_cmd curl -L http://chromedriver.storage.googleapis.com/$version/$file -o "$appium_home"/build/chromedriver/$platform/chromedriver.zip
@@ -501,6 +549,9 @@ install_chromedriver() {
     echo "* Unzipping ChromeDriver"
     run_cmd unzip chromedriver.zip
     run_cmd rm chromedriver.zip
+    if [[ $binary != "" ]]; then
+        run_cmd mv chromedriver $binary
+    fi
     run_cmd popd
 }
 
@@ -530,6 +581,9 @@ main() {
     fi
     reset_npm
     reset_general
+    if $include_dev ; then
+        reset_sample_code
+    fi
     if $should_reset_ios ; then
         reset_ios
     fi

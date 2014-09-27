@@ -17,10 +17,10 @@ describe('uicatalog - controls @skip-ios6', function () {
     });
   }
 
-  it('should be able to get and set a picker value', function (done) {
+  it('should be able to get and set a picker value(s)', function (done) {
     driver
       .elementByXPath("//UIAStaticText[contains(@label,'Picker View')]").click()
-      .elementByXPath("//UIAPickerWheel[@name = 'Red color component value']").click()
+      .elementByXPath("//UIAPickerWheel[@name = 'Red color component value']")
       .then(function (wheel) {
         return wheel
           .getAttribute("value")
@@ -31,6 +31,23 @@ describe('uicatalog - controls @skip-ios6', function () {
                 .should.become("70. 15 of 52");
           });
       })
+      .elementByXPath("//UIAPickerWheel[@name = 'Green color component value']")
+      .then(function (wheel) {
+        return wheel
+            .type("70")
+            .getAttribute("value")
+              .should.become("70. 15 of 52");
+      })
+      .elementByXPath("//UIAPickerWheel[@name = 'Blue color component value']")
+      .then(function (wheel) {
+        return wheel
+            .type("70")
+            .getAttribute("value")
+              .should.become("70. 15 of 52");
+      })
+      .elementByClassName("UIAPickerWheel")
+        .getAttribute("values")
+          .should.eventually.have.length(52)
       .nodeify(done);
   });
 

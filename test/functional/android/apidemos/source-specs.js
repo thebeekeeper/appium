@@ -18,7 +18,7 @@ describe("apidemos - source", function () {
 
   it('should return the page source', function (done) {
     driver
-      .elementByNameOrNull('Accessibility') // waiting for page to load
+      .elementByAccessibilityId('Animation') // waiting for page to load
       .source()
       .then(function (source) {
         assertSource(source);
@@ -26,11 +26,34 @@ describe("apidemos - source", function () {
   });
   it('should return the page source without crashing other commands', function (done) {
     driver
-      .complexFind([[[3, "Animation"]]])
+      .elementByAccessibilityId('Animation')
       .source().then(function (source) {
         assertSource(source);
       })
-      .complexFind([[[3, "Animation"]]])
+      .elementByAccessibilityId('Animation')
       .nodeify(done);
+  });
+  it('should get less source when compression is enabled', function (done) {
+    var getSourceWithoutCompression = function () {
+      return driver.updateSettings({"ignoreUnimportantViews": false}).source();
+    };
+    var getSourceWithCompression    = function () {
+      return driver.updateSettings({"ignoreUnimportantViews": true }).source();
+    };
+
+    var sourceWithoutCompression, sourceWithCompression;
+
+    getSourceWithoutCompression()
+    .then(function (els) {
+      sourceWithoutCompression = els;
+      return getSourceWithCompression();
+    })
+    .then(function (els) {
+      sourceWithCompression = els;
+    })
+    .then(function () {
+      return sourceWithoutCompression.length.should.be.greaterThan(sourceWithCompression.length);
+    })
+    .nodeify(done);
   });
 });

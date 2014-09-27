@@ -9,19 +9,19 @@ describe('testapp - find element', function () {
   describe('by id', function () {
     it('should first attempt to match accessibility id', function (done) {
       driver.elementById('ComputeSumButton').then(function (el) {
-        el.getTagName().should.eventually.equal('Compute Sum');
+        return el.getAttribute('label').should.eventually.equal('Compute Sum');
       }).nodeify(done);
     });
 
     it('should attempt to match by string if no accessibility id matches', function (done) {
       driver.elementById('Compute Sum').then(function (el) {
-        el.getTagName().should.eventually.equal('Compute Sum');
+        return el.getAttribute('label').should.eventually.equal('Compute Sum');
       }).nodeify(done);
     });
 
     it('should use a localized string if the id is a localization key', function (done) {
       driver.elementById('main.button.computeSum').then(function (el) {
-        el.getTagName().should.eventually.equal('Compute Sum');
+        return el.getAttribute('label').should.eventually.equal('Compute Sum');
       }).nodeify(done);
     });
 
@@ -86,7 +86,7 @@ describe('testapp - find element', function () {
   it('should find all elements by class name in the app', function (done) {
     driver
       .elementsByClassName('UIAButton').then(function (els) {
-        [4, 6].should.contain(els.length);
+        [4, 7].should.contain(els.length);
         els[0].value.should.exist;
       }).nodeify(done);
   });
@@ -110,6 +110,12 @@ describe('testapp - find element', function () {
       .nodeify(done);
   });
 
+  it('should find an element with accessibility id containing an apostrophe', function (done) {
+    driver.element('accessibility id', "Access'ibility").then(function (el) {
+      el.should.exist;
+    }).nodeify(done);
+  });
+
   it('should not find element by incomplete class name but return respective error code', function (done) {
     driver.elementsByClassName('notAValidReference')
       .catch(function (err) {
@@ -124,9 +130,13 @@ describe('testapp - find element', function () {
       .nodeify(done);
   });
 
-  // it('should find an element within its parent', function (done) {
-  //   driver
-  //     .elementByClassName('UIAButton').should.eventually.exist
-  //     .elementByClassName('UIALabel').should.eventually.exist
-  //     .nodeify(done);
+  it('should find an element within its parent', function (done) {
+    // there are 2 textfields with the same name imbricated.
+    driver
+      .elementById('TextField2').then(function (parent) {
+        parent.should.exist;
+        return parent.elementById('TextField2').should.eventually.exist;
+      })
+      .nodeify(done);
+  });
 });

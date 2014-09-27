@@ -11,7 +11,10 @@ var env = require('../../../helpers/env')
   , chai = require('chai')
   , should = chai.should()
   , spawn = require('child_process').spawn
+  , appPathBase = require('../app-path-base.js')
   , _ = require('underscore')
+  , ChaiAsserter = require('../../../helpers/asserter.js').ChaiAsserter
+  , getAppPath = require('../../../helpers/app').getAppPath
   , androidReset = require('../../../helpers/reset').androidReset;
 
 describe("apidemo - basic @skip-ci", function () {
@@ -90,10 +93,16 @@ describe("apidemo - basic @skip-ci", function () {
       }).nodeify(done);
     });
 
-    it('should be able to detect if app is installed', function (done) {
+    it('should be able to install/remove app and detect its status', function (done) {
       driver
         .isAppInstalled('foo')
           .should.eventually.equal(false)
+        .isAppInstalled('io.appium.android.apis')
+          .should.eventually.equal(true)
+        .removeApp('io.appium.android.apis')
+        .isAppInstalled('io.appium.android.apis')
+          .should.eventually.equal(false)
+        .installApp(getAppPath('ApiDemos'))
         .isAppInstalled('io.appium.android.apis')
           .should.eventually.equal(true)
         .nodeify(done);
@@ -120,7 +129,28 @@ describe("apidemo - basic @skip-ci", function () {
         })
         .nodeify(done);
     });
+  });
 
+  describe('at any time', function () {
+    var driver;
+    setup(this, desired)
+      .then(function (d) { driver = d; });
+
+    it('should open an activity in this application', function (done) {
+      driver
+        .startActivity({appPackage: "io.appium.android.apis", appActivity: ".accessibility.AccessibilityNodeProviderActivity"})
+        .getCurrentActivity()
+        .should.eventually.include("Node")
+        .nodeify(done);
+    });
+
+    it('should open an activity in another application', function (done) {
+      driver
+        .startActivity({appPackage: "com.android.contacts", appActivity: ".ContactsListActivity"})
+        .getCurrentActivity()
+        .should.eventually.include("Contact")
+        .nodeify(done);
+    });
   });
 
   describe('with fastReset', function () {
@@ -191,6 +221,8 @@ describe("apidemo - basic @skip-ci", function () {
         }).nodeify(done);
       });
     });
+
+    describe('app path with spaces', _.partial(appPathBase.spacesTest, desired));
   });
 
   describe('pre-existing uiautomator session', function () {
@@ -224,6 +256,22 @@ describe("apidemo - basic @skip-ci", function () {
           .nodeify(done);
       });
     });
+
+    describe('launching activity with custom intent parameter category', function () {
+      var driver;
+      var caps = _.clone(desired);
+      caps.appActivity = "io.appium.android.apis.app.HelloWorld";
+      caps.intentCategory = "appium.android.intent.category.SAMPLE_CODE";
+      setup(this, caps)
+       .then(function (d) { driver = d; });
+
+      it('should launch activity with intent category', function (done) {
+        driver.getCurrentActivity()
+              .should.eventually.include("HelloWorld")
+              .nodeify(done);
+      });
+    });
+
   });
 
   describe('appium android', function () {
@@ -264,6 +312,63 @@ describe("apidemo - basic @skip-ci", function () {
       caps.appActivity = '.ApiDemos';
       session = initSession(caps, desired);
       session.setUp(title + "- package").nodeify(done);
+    });
+
+  });
+
+  describe('appium android', function () {
+    this.timeout(env.MOCHA_INIT_TIMEOUT);
+
+    var session;
+    var title = getTitle(this);
+
+    beforeEach(function (done) {
+      var adb = new ADB({});
+      adb.uninstallApk("io.appium.android.apis", done);
+    });
+
+    afterEach(function () { return session.tearDown(this.currentTest.state === 'passed'); });
+
+    it('should be able to start session without launching app', function (done) {
+      var appPath = path.resolve(desired.app);
+      var caps = _.defaults({'app': appPath, 'autoLaunch': false}, desired);
+      session = initSession(caps, desired);
+      var driver = session.setUp(title + "- autoLaunch");
+      var activityToBeBlank = new ChaiAsserter(function (driver) {
+        return driver
+          .getCurrentActivity()
+          .should.eventually.not.include(".ApiDemos");
+      });
+      driver
+        .waitFor(activityToBeBlank, 10000, 700)
+        .launchApp()
+        .getCurrentActivity()
+          .should.eventually.include(".ApiDemos")
+        .nodeify(done);
+    });
+
+    it('should be able to start session without installing app', function (done) {
+      var appPath = path.resolve(desired.app);
+      var appPkg = "io.appium.android.apis";
+      var caps = _.defaults({
+        app: appPkg,
+        autoLaunch: false,
+        appActivity: ".ApiDemos"
+      }, desired);
+      session = initSession(caps, desired);
+      var driver = session.setUp(title + "- autoLaunch");
+      var activityToBeBlank = new ChaiAsserter(function (driver) {
+        return driver
+          .getCurrentActivity()
+          .should.eventually.not.include(".ApiDemos");
+      });
+      driver
+        .waitFor(activityToBeBlank, 10000, 700)
+        .installApp(appPath)
+        .launchApp()
+        .getCurrentActivity()
+          .should.eventually.include(".ApiDemos")
+        .nodeify(done);
     });
 
   });
