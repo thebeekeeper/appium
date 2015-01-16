@@ -8,7 +8,7 @@ var env = require('../../../../helpers/env.js'),
     desired = require('./desired.js'),
     ChaiAsserter = require('../../../../helpers/asserter.js').ChaiAsserter;
 
-describe('safari - webview - special capabilities', function () {
+describe('safari - webview - special capabilities @skip-ios6', function () {
   describe('phishing warning', function () {
     var driver;
     var specialCaps = _.clone(desired);
@@ -19,7 +19,11 @@ describe('safari - webview - special capabilities', function () {
       loadWebView(specialCaps, driver).nodeify(done);
     });
 
-    it('should not display a phishing warning with safariIgnoreFraudWarning @skip-chrome', function (done) {
+    // iOS8 currently does not disable the phishing warning for foo:bar@ type
+    // addresses, even when running the sim manually
+    // TODO: find another way to trigger the phishing warning that IS disabled
+    // by the pref on iOS8
+    it('should not display a phishing warning with safariIgnoreFraudWarning @skip-chrome @skip-ios8', function (done) {
       var titleToBecomeRight = new ChaiAsserter(function (driver) {
         return driver
           .title()

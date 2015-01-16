@@ -8,7 +8,7 @@ var env = require('../../helpers/env')
 
 var desired = {
   app: getAppPath('ApiDemos'),
-  appActivity: '.view.Controls1',
+  appActivity: '.view.TextFields',
   newCommandTimeout: 90
 };
 if (env.SELENDROID) {
@@ -140,6 +140,11 @@ module.exports = function () {
       runTextEditTest(testText, done);
     });
 
+    it('should be able to send a u with an umlaut', function (done) {
+      var testText = 'ü';
+      runTextEditTest(testText, done);
+    });
+
     // skipping because clear doesn't work reliably on RTL scripts
     it.skip('should be able to send Arabic', function (done) {
       var testText = 'تجريب';
@@ -170,6 +175,18 @@ module.exports = function () {
     it('should be able to send Russian', function (done) {
       var testText = 'тестирование';
       runTextEditTest(testText, done);
+    });
+
+    describe('pressing device key with unicode keyboard', function () {
+      it('should be able to send combination keyevents', function (done) {
+        driver
+          .waitForElementByClassName('android.widget.EditText')
+            .clear()
+          .pressDeviceKey(29, 193)
+          .elementByClassName('android.widget.EditText')
+            .text().should.become('A')
+          .nodeify(done);
+      });
     });
   });
 };

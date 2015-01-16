@@ -13,10 +13,9 @@ env.APPIUM_HOST = process.env.APPIUM_HOST || '127.0.0.1';
 env.APPIUM_PORT = parseInt(process.env.APPIUM_PORT || 4723, 10);
 env.VERSION = process.env.VERSION;
 
-// travis
-env.TRAVIS_JOB_NUMBER = process.env.TRAVIS_JOB_NUMBER;
-env.TRAVIS_BUILD_NUMBER = process.env.TRAVIS_BUILD_NUMBER;
-env.TRAVIS_BUILD_DIR = process.env.TRAVIS_BUILD_DIR;
+// Jenkins job numbers
+env.APPIUM_BUILD_NUMBER = process.env.APPIUM_BUILD_NUMBER;
+env.APPIUM_JOB_NUMBER = process.env.APPIUM_JOB_NUMBER;
 
 // http
 env.HTTP_CONFIG = {};
@@ -63,9 +62,13 @@ function iphoneOrIpadSimulator(device, version) {
     case '6.1':
     case '7.0':
     case '7.1':
-      return isIpad ? 'iPad Simulator' : 'iPhone Simulator';
-    // case '7.1':
-    //   return isIpad ? 'iPad Retina' : 'iPhone Retina 4-inch';
+      return isIpad ? 'iPad 2' : 'iPhone 5s';
+    case '8.0':
+      return isIpad ? 'iPad 2' : 'iPhone 6';
+    case '8.1':
+      return isIpad ? 'iPad 2' : 'iPhone 6';
+    case '8.2':
+      return isIpad ? 'iPad 2' : 'iPhone 6';
     default:
       throw new Error("invalid version");
   }
@@ -97,6 +100,33 @@ switch (env.DEVICE) {
     env.CAPS = {
       browserName: ''
     , deviceName: iphoneOrIpadSimulator(env.DEVICE, "7.1")
+    , app: process.env.APP ? path.resolve(__dirname, "../../sample-code/apps/" + process.env.APP + "/build/Release-iphonesimulator/" + process.env.APP + ".app") : ''
+    };
+    break;
+  case 'ios8':
+  case 'ios8_iphone':
+  case 'ios8_ipad':
+    env.CAPS = {
+      browserName: ''
+    , deviceName: iphoneOrIpadSimulator(env.DEVICE, "8.0")
+    , app: process.env.APP ? path.resolve(__dirname, "../../sample-code/apps/" + process.env.APP + "/build/Release-iphonesimulator/" + process.env.APP + ".app") : ''
+    };
+    break;
+  case 'ios81':
+  case 'ios81_iphone':
+  case 'ios81_ipad':
+    env.CAPS = {
+      browserName: ''
+    , deviceName: iphoneOrIpadSimulator(env.DEVICE, "8.1")
+    , app: process.env.APP ? path.resolve(__dirname, "../../sample-code/apps/" + process.env.APP + "/build/Release-iphonesimulator/" + process.env.APP + ".app") : ''
+    };
+    break;
+  case 'ios82':
+  case 'ios82_iphone':
+  case 'ios82_ipad':
+    env.CAPS = {
+      browserName: ''
+    , deviceName: iphoneOrIpadSimulator(env.DEVICE, "8.2")
     , app: process.env.APP ? path.resolve(__dirname, "../../sample-code/apps/" + process.env.APP + "/build/Release-iphonesimulator/" + process.env.APP + ".app") : ''
     };
     break;
@@ -133,12 +163,15 @@ env.IOS = env.DEVICE.match(/ios/i);
 env.IOS6 = env.DEVICE.match(/ios6/i);
 env.IOS7 = env.DEVICE.match(/ios7/i);
 env.IOS71 = env.DEVICE.match(/ios71/i);
+env.IOS8 = env.DEVICE.match(/ios8/i);
+env.IOS81 = env.DEVICE.match(/ios81/i);
+env.IOS82 = env.DEVICE.match(/ios82/i);
 env.ANDROID = env.DEVICE.match(/android/i);
 env.SELENDROID = env.DEVICE.match(/selendroid/i);
 
 // better timeout settings for 71
 env.LAUNCH_TIMEOUT =  process.env.LAUNCH_TIMEOUT ? JSON.parse(process.env.LAUNCH_TIMEOUT) :
-  (env.IOS71 ? {"global": 60000, "afterSimLaunch": 10000} : 60000);
+  ((env.IOS71 || env.IOS8) ? {"global": 60000, "afterSimLaunch": 10000} : 60000);
 
 env.CAPS.launchTimeout = env.LAUNCH_TIMEOUT;
 
@@ -158,6 +191,12 @@ if (env.VERSION) {
   env.CAPS.platformVersion = "7.1";
 } else if (env.IOS7) {
   env.CAPS.platformVersion = "7.0";
+} else if (env.IOS81) {
+  env.CAPS.platformVersion = "8.1";
+} else if (env.IOS82) {
+  env.CAPS.platformVersion = "8.2";
+} else if (env.IOS8) {
+  env.CAPS.platformVersion = "8.0";
 }
 
 // max retry

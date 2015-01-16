@@ -3,7 +3,6 @@ var env = require('./env')
   , wd = require("wd")
   , Q = require("q")
   , _ = require("underscore")
-  , iosReset = require('./reset').iosReset
   , androidUninstall = require('./reset').androidUninstall;
 
 require('colors');
@@ -55,6 +54,10 @@ module.exports.initSession = function (desired, opts) {
     });
   });
 
+  wd.addPromiseChainMethod('printSource', function () {
+    return this.source().then(function (s) { console.log(s); });
+  });
+
   return {
     setUp: function (name) {
       if (env.VERBOSE) {
@@ -85,9 +88,9 @@ module.exports.initSession = function (desired, opts) {
       _.defaults(caps, env.CAPS);
 
       if (env.SAUCE) {
-        if (env.TRAVIS_JOB_NUMBER) name = '[' + env.TRAVIS_JOB_NUMBER + '] ' + name;
+        if (env.APPIUM_JOB_NUMBER) name = '[' + env.APPIUM_JOB_NUMBER + '] ' + name;
         if (name) caps.name = name.replace(/@[^\s]*/,'');
-        if (env.TRAVIS_BUILD_NUMBER) caps.build = env.TRAVIS_BUILD_NUMBER;
+        if (env.APPIUM_BUILD_NUMBER) caps.build = env.APPIUM_BUILD_NUMBER;
         if (opts['expect-error']){
           caps.tags.push('expect-error');
         }
@@ -121,18 +124,16 @@ module.exports.initSession = function (desired, opts) {
       if (env.MAX_RETRY) attempts = Math.min(env.MAX_RETRY, attempts);
       return browser.chain()
         .then(function () {
-          if (!env.SAUCE && env.IOS && env.RESET_IOS && !opts['no-reset']) {
-            // TODO this should not be necessary
-            return iosReset();
-          }
-        }).then(function () {
           // if android uninstall package first
           if (!env.SAUCE && desired.platformName === 'Android' && desired.appPackage) {
             // TODO this should not be necessary
             return androidUninstall(desired.appPackage);
           }
         }).then(function () { return init(attempts); })
-        .then(function () { initialized = true; })
+        .then(function () {
+          initialized = true;
+          browser._origCaps = caps;
+        })
         .setImplicitWaitTimeout(env.IMPLICIT_WAIT_TIMEOUT);
     },
     tearDown: function (passed) {

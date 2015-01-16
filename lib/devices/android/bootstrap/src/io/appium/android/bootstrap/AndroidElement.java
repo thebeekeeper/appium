@@ -2,6 +2,9 @@ package io.appium.android.bootstrap;
 
 import android.graphics.Rect;
 import android.view.MotionEvent.PointerCoords;
+import android.view.accessibility.AccessibilityNodeInfo;
+import com.android.uiautomator.common.ReflectionUtils;
+import com.android.uiautomator.core.Configurator;
 import com.android.uiautomator.core.UiObject;
 import com.android.uiautomator.core.UiObjectNotFoundException;
 import com.android.uiautomator.core.UiSelector;
@@ -39,6 +42,10 @@ public class AndroidElement {
   public boolean click() throws UiObjectNotFoundException {
     return el.click();
   }
+  
+  public boolean exists() {
+    return el.exists();
+  }
 
   public boolean dragTo(final int destX, final int destY, final int steps)
       throws UiObjectNotFoundException {
@@ -59,63 +66,14 @@ public class AndroidElement {
       return false;
     }
   }
-
-  public Point getAbsolutePosition(final Double X, final Double Y)
-      throws UiObjectNotFoundException, InvalidCoordinatesException {
-    final Point point = new Point(X, Y);
-    return getAbsolutePosition(point, false);
-  }
-
-  public Point getAbsolutePosition(final Double X, final Double Y,
-      final boolean boundsChecking) throws UiObjectNotFoundException,
-      InvalidCoordinatesException {
-    final Point point = new Point(X, Y);
-    return getAbsolutePosition(point, boundsChecking);
-  }
-
+  
   public Point getAbsolutePosition(final Point point)
       throws UiObjectNotFoundException, InvalidCoordinatesException {
-    return getAbsolutePosition(point, false);
-  }
-
-  public Point getAbsolutePosition(final Point point,
-      final boolean boundsChecking) throws UiObjectNotFoundException,
-      InvalidCoordinatesException {
-    final Rect rect = el.getBounds();
-    final Point pos = new Point();
+    final Rect rect = this.getBounds();
+    
     Logger.debug("Element bounds: " + rect.toShortString());
-
-    if (point.x == 0) {
-      pos.x = rect.width() * 0.5 + rect.left;
-    } else if (point.x <= 1) {
-      pos.x = rect.width() * point.x + rect.left;
-    } else {
-      pos.x = rect.left + point.x;
-    }
-    if (boundsChecking) {
-      if (pos.x > rect.right || pos.x < rect.left) {
-        throw new InvalidCoordinatesException("X coordinate ("
-            + pos.x.toString() + " is outside of element rect: "
-            + rect.toShortString());
-      }
-    }
-
-    if (point.y == 0) {
-      pos.y = rect.height() * 0.5 + rect.top;
-    } else if (point.y <= 1) {
-      pos.y = rect.height() * point.y + rect.top;
-    } else {
-      pos.y = rect.left + point.y;
-    }
-    if (boundsChecking) {
-      if (pos.y > rect.bottom || pos.y < rect.top) {
-        throw new InvalidCoordinatesException("Y coordinate ("
-            + pos.y.toString() + " is outside of element rect: "
-            + rect.toShortString());
-      }
-    }
-
-    return pos;
+    
+    return PositionHelper.getAbsolutePosition(point, rect, new Point(rect.left, rect.top), false);
   }
 
   public boolean getBoolAttribute(final String attr)
@@ -165,6 +123,41 @@ public class AndroidElement {
     }
   }
 
+  public String getResourceId() throws UiObjectNotFoundException {
+    String resourceId = "";
+
+    if (!API_18) {
+      Logger.error("Device does not support API >= 18!");
+      return resourceId;
+    }
+
+    try {
+      /*
+       * Unfortunately UiObject does not implement a getResourceId method.
+       * There is currently no way to determine the resource-id of a given
+       * element represented by UiObject. Until this support is added to
+       * UiAutomater, we try to match the implementation pattern that is
+       * already used by UiObject for getting attributes using reflection.
+       * The returned string matches exactly what is displayed in the
+       * UiAutomater inspector.
+       */
+      ReflectionUtils utils = new ReflectionUtils();
+      Method method = utils.getMethod(el.getClass(), "findAccessibilityNodeInfo", long.class);
+
+      AccessibilityNodeInfo node = (AccessibilityNodeInfo)method.invoke(el, Configurator.getInstance().getWaitForSelectorTimeout());
+
+      if (node == null) {
+        throw new UiObjectNotFoundException(el.getSelector().toString());
+      }
+
+      resourceId = node.getViewIdResourceName();
+    } catch (final Exception e) {
+      Logger.error("Exception: " + e + " (" + e.getMessage() + ")");
+    }
+
+    return resourceId;
+  }
+
   public String getContentDesc() throws UiObjectNotFoundException {
     return el.getContentDescription();
   }
@@ -185,6 +178,8 @@ public class AndroidElement {
       res = getText();
     } else if (attr.equals("className")) {
       res = getClassName();
+    } else if (attr.equals("resourceId")) {
+      res = getResourceId();
     } else {
       throw new NoAttributeFoundException(attr);
     }

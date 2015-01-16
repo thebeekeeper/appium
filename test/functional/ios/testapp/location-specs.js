@@ -16,7 +16,8 @@ describe('testapp - location - 1 @skip-ci', function () {
   it('should return the right x/y coordinates', function (done) {
     driver
       .elementByClassName('UIAButton').getLocation().then(function (location) {
-        location.x.should.equal(94);
+        var possibleLocs = [94, 110]; // 110 is for iphone 6
+        possibleLocs.should.contain(parseInt(location.x, 10));
         location.y.should.be.above(120);
       })
       .nodeify(done);
@@ -37,7 +38,7 @@ describe('testapp - location - 1 @skip-ci', function () {
 });
 
 // TODO: location tests are not working well on sauce
-describe('testapp - location - 2 @skip-ios6 @skip-ci', function () {
+describe('testapp - location - 2 @skip-ci', function () {
   var driver;
   var newDesired = _.clone(desired);
   _.extend(newDesired, {
@@ -56,7 +57,7 @@ describe('testapp - location - 2 @skip-ios6 @skip-ci', function () {
 });
 
 // TODO: location tests are not working well on sauce
-describe('testapp - location - 3  @skip-ci', function () {
+describe('testapp - location - 3 @skip-ci', function () {
   var newDesired = _.clone(desired);
   _.extend(newDesired, {
     locationServicesAuthorized: true
@@ -74,7 +75,7 @@ describe('testapp - location - 3  @skip-ci', function () {
 });
 
 // TODO: location tests are not working well on sauce
-describe('testapp - location - 4  @skip-ci', function () {
+describe('testapp - location - 4 @skip-ci', function () {
   var driver;
   var newDesired = _.clone(desired);
   _.extend(newDesired, {
@@ -87,6 +88,26 @@ describe('testapp - location - 4  @skip-ci', function () {
     driver
       .elementByName('locationStatus').getValue().then(function (checked) {
         checked.should.equal(0);
+      })
+      .nodeify(done);
+  });
+});
+
+describe('testapp - location - 5 @skip-ci', function () {
+  var driver;
+  var newDesired = _.clone(desired);
+  _.extend(newDesired, {
+    locationServicesAuthorized: true,
+    bundleId: 'io.appium.TestApp',
+    app: 'assets/TestApp7.1.app.zip'
+  });
+
+  setup(this, newDesired, {'no-reset': true}).then(function (d) { driver = d; });
+
+  it('should be able to be turned on when using a zip/ipa file', function (done) {
+    driver
+      .elementByName('locationStatus').getValue().then(function (checked) {
+        checked.should.equal(1);
       })
       .nodeify(done);
   });
